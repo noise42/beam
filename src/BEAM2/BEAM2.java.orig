@@ -1,0 +1,409 @@
+package BEAM2;
+
+import java.util.ArrayList;
+import java.io.BufferedWriter;
+//import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+
+public class BEAM2 {
+	private static boolean acceptScore(double scoreVecchio, double scoreNuovo, double temperature) {
+		if (scoreNuovo-scoreVecchio >0) System.err.println("SPOTTED SOME DISCREPANCIES!! Score mandato in"
+				+ "accettazione quando non doveva");
+		double prob = Math.exp(100*(scoreNuovo - scoreVecchio)/temperature);
+		if (temperature == 0){
+			prob = 0;
+		}
+		if(Math.random() < prob ){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		int motifWidth=10;//Integer.parseInt(args[0]);
+		ArrayList<Motif> inputSequences=new ArrayList<Motif>();
+
+		int check = 0;
+		int escape = 0;
+
+		IO.readInput(args[0],inputSequences); //riempie inputSequences
+
+		double[][]mbr=new double[83][83];
+//		double[][]scoringMatrix;
+		double[][]condProb = new double[83][83];
+		double[]dataPriors = new double[83];
+		double[]alphas = new double[83];
+//		BEARManager.readMatrix(args[2], condProb);
+//		BEARManager.readMatrix(args[1],mbr); //riempie mbr
+//		BEARManager.readVector(args[3], dataPriors);
+//		BEARManager.readVector(args[4], alphas);
+
+		BEARManager.readMatrix("./src/matrixPriori", condProb);
+		BEARManager.readMatrix("./src/matriceRidondanza50",mbr); //riempie mbr
+		BEARManager.readVector("./src/listaPriorPesati_uniform.txt", dataPriors);
+		BEARManager.readVector("./src/alpha.txt", alphas);
+//		scoringMatrix = BEARManager.computeScoringMatrix(mbr);
+		
+		//INIZIO branch marco-bgModelFromDataset**********************************
+//		Shannon priors = new Shannon();
+//		priors.fillFromInput(inputSequences);
+//		BEARManager.readInputSequences(inputSequences, dataPriors);
+		//FINE branch marco-bgModelFromDataset**********************************
+		
+		MotifManager manager=new MotifManager();
+		int startingNoOfSequences = 10;
+		double percentage =startingNoOfSequences/(double)inputSequences.size();
+		double temperatureStart=100;
+		double coolingRate=0.001;//These two variables can be fixed values or can be taken as input
+		int widthUpperBound = 100;
+		int minSteps = 10000;
+		double passiTot=(temperatureStart)/coolingRate;
+		
+		double minTemp = 0.001;
+		double maximumScoreEver=-9999;
+		int escapeCondition= inputSequences.size();
+		boolean escaped = false;
+		double temperature = temperatureStart;
+		
+		if(args.length>1){
+//			temperatureStart = Double.parseDouble(args[1]);
+//			coolingRate = Double.parseDouble(args[2]);
+			minSteps =  Integer.parseInt(args[1]);
+			widthUpperBound = Integer.parseInt(args[2]);
+		}
+		//-----QUI FINISCONO I PARAMETRI DI INPUT-----
+
+		MotifHandler mh = null;
+		MotifHandler bestMh = new MotifHandler();
+		mh=manager.initialise(motifWidth,inputSequences,mbr,percentage);//genera la prima soluzione casuale		
+		PSSM.computePSSM(mh);
+		mh.setMotifWidth();		
+
+		MotifHandler.computeScore(mh, alphas, dataPriors);//genera primo punteggio
+
+		int contatore=0;
+		//per avere almeno 10 operazioni su ogni sequenza in media (7 operazioni, 5 subopt)
+		passiTot = inputSequences.size()*7*mh.getObjectMotif(0).getSequenceList().size()*5; 
+		if (passiTot < minSteps){
+			passiTot = minSteps + inputSequences.size()*7*mh.getObjectMotif(0).getSequenceList().size();
+		}
+		//l'ultima variabile e' il numero di subopt
+		coolingRate = (temperatureStart - minTemp)/minSteps; //in pratica quando la T va a 0.0
+		escapeCondition = inputSequences.size()*7*mh.getObjectMotif(0).getSequenceList().size();
+		//se dopo aver in media agito con ogni perturbazione su tutte le sequenze una volta non cambia nulla, allora escape, ma solo se sono stati fatti almeno minSteps
+
+		System.out.println("..............STARTING MOTIF..............\n");
+		System.out.println(mh.toString());
+		System.out.println("Score : " + mh.getScore());
+		System.out.println("Length : " + mh.getMotifWidth());
+		System.out.println("#Sequences : " + mh.cardinality() +"\n");
+
+	
+		/*---------*/
+		double[][] media;
+		media = new double[][]{{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
+		int[][] count;
+		count = new int[][]{{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
+		int[][] acceptSecondCount;
+		int[][] rejectCount;
+		acceptSecondCount = new int[][]{{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
+		rejectCount = new int[][]{{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
+
+		/*---------*/
+
+
+
+
+
+		//
+
+
+		//-----INIZIO CICLO -----
+
+		while((escape < escapeCondition || contatore < minSteps) && contatore < passiTot ){
+			//se anche e' stata raggiunta la condizione di escape non fermarti prima di minSteps, in ogni caso esci dopo passiTot
+			System.out.println("\n>>>>>>>>>>>>>>>ITERATION : "+contatore+"<<<<<<<<<<<<<<<");
+			double currentScore=mh.getScore();
+			//System.out.println(perturbatedMotif.motifLength + "\t" + m.motifLength);
+
+			if(mh.cardinality() >= 1){
+				mh.setMotifWidth();
+			}else{
+				//				System.err.println(mh.cardinality());
+			}
+
+			//-----PERTURBO IL MOTIVO, TENGO LA SOLUZIONE PRECEDENTE-----
+			int operation = manager.perturbateMotif(mh,inputSequences,mbr, widthUpperBound);
+
+			//-----NEL CASO NORMALE CALCOLA PSSM E SCORE-----
+			if(mh.cardinality()<1){
+				//-----SE IL MH CONTIENE 0 SEQUENZE INVECE FAI UN ADD-----		
+				currentScore=0;
+				mh.setMotifWidth(motifWidth);
+				operation = manager.perturbateMotif(mh,inputSequences,mbr, widthUpperBound);
+			}
+//SE CI SONO PROBLEMI DECOMMENTARE QUESTO SETMOTIFWIDTH ALERT ALERT ALERT!
+//			mh.setMotifWidth();
+
+			PSSM.computePSSM(mh);
+
+			MotifHandler.computeScore(mh, alphas, dataPriors);
+			
+			/*Test per peso singole operazioni*/
+			double delta = mh.getScore() - currentScore;
+
+//			if(operation == 1){
+//				debRem[contatore] = delta;
+//				//				System.err.println(mh.getScore() + " nuovo | vecchio " + maxScore);
+//			}
+			media[(int)(contatore/(passiTot/3))][operation] += delta;
+			count[(int)(contatore/(passiTot/3))][operation] += 1;
+			//			}
+			/*-------------------------------*/
+			double newScore = mh.getScore();
+			
+			//correzione per accettazione nuova colonna lo fa solo per expand e shrink
+			if(operation == 4){
+				newScore = mh.getScore()*((double)mh.getMotifWidthPrev()/(mh.getMotifWidthPrev()+1.0));
+				System.out.println("new:" + newScore + " score: " + mh.getScore());
+				System.out.println("current:" + currentScore);
+			}else if(operation == 5){
+				newScore = mh.getScore()*(((double)mh.getMotifWidthPrev()+1.0)/mh.getMotifWidthPrev());
+				System.out.println("new:" + newScore + " score: " + mh.getScore());
+				System.out.println("current:" + currentScore);
+			}
+			
+			
+			
+			if(newScore>=currentScore){
+				System.out.println("---ACCEPTED---\n");
+				currentScore=mh.getScore();
+			
+			}else if(acceptScore(currentScore,newScore, temperature)){
+				System.out.println("---ACCEPTED SECOND CHANCE---\n");				
+				currentScore=mh.getScore();
+
+				acceptSecondCount[(int)(contatore/(passiTot/3))][operation] += 1;
+			}else{
+				System.out.println("\n---REJECTED---\n");
+				MotifManager.ctrlZ(operation, mh, inputSequences);//il ctrlZ non riprende il vecchio score!!! ora si
+				mh.getPSSM().setScore(currentScore); //aggiunto : maxScore e' semplicemente lo score del giro precedente
+				
+				rejectCount[(int)(contatore/(passiTot/3))][operation] += 1;
+
+
+			}
+			//Per rimettere la soglia per l'add rimettere l'else qua sotto (tutto) e l'if sopra, reindentare e mettere gli && delta >20
+			//			}else{
+			//				System.out.println("\n---REJECTED---\n");
+			//				MotifManager.ctrlZ(operation, mh, inputSequences);//il ctrlZ non riprende il vecchio score!!!
+			//				mh.getPSSM().setScore(maxScore); //aggiunto : maxScore e' semplicemente lo score del giro precedente
+			//				rejectCount[(int)(contatore/(passiTot/3))][operation] += 1;
+			//
+			//				
+			//			}
+
+			
+			if(temperature > minTemp){
+				temperature-=coolingRate;
+			}else{
+				temperature = 0;
+			}
+			
+			
+			//----------------------------TEST MAX SCORE----------------------------
+			if(mh.getScore() > maximumScoreEver){
+				maximumScoreEver = mh.getScore();
+				bestMh.MotifHandlerClone(mh);
+				bestMh.getPSSM().setScore(maximumScoreEver);
+				check = contatore;
+				escape = 0;
+			}else if(Math.abs(mh.getScore()- maximumScoreEver) < 1){//altezza stimata colonna random logo
+				escape++;
+				System.out.println("escape in: " + (escapeCondition - escape) + " passi");
+			}else{
+				escape = 0;
+			}
+			//----------------------------TEST MAX SCORE END----------------------------
+
+
+			if(mh.cardinality() >= 1){
+				mh.setMotifWidth();
+			}
+			//			System.out.println(mh.toString());
+			System.out.println("Temperature : " + temperature);
+			System.out.println("Score : " + mh.getScore());
+			System.out.println("Length : " + mh.getMotifWidth());
+			System.out.println("#Sequences : " + mh.cardinality() +"\n");
+			contatore++;
+//			if(contatore%100 == 0){
+//				//				System.out.println(Math.round(contatore/passiTot*100) + "%");
+//			}
+		}
+		System.out.println("\n-------------END OF COMPUTATION-------------\n");
+		if(escape >= escapeCondition) escaped = true;
+		
+		MotifUtilities.computePartials(mh,alphas,dataPriors);
+		MotifUtilities.computePartials(bestMh,alphas,dataPriors);
+
+
+		System.out.println(mh.toString());
+		System.out.println("------");
+		System.out.println("Motif Score : "+mh.getScore());
+
+		//		PSSM.computeAlpha(mh, condProb, PSSM.computeCounts(mh));
+
+		//		double glmscr = PSSM.pValue(mh, alphas, dataPriors);
+		if(mh.cardinality() != 0){
+			mh.setMotifWidth();}
+		
+		PSSM.computePSSM(mh);
+		PSSM.computePSSM(bestMh);
+
+		//		System.out.println(mh.printPSSM());
+
+
+		//qBEAR
+		//		System.out.println("\n-------------Simplified Motif-------------\n");
+		//		PSSM.computeQBEARPSSM(mh);
+		//		System.out.println(mh.printQBEARPSSM());
+
+		//Media Delta Score
+		System.out.println("\n-------------Medie Delta Score-------------\n");
+		for(int parte = 0; parte < 3; parte++){
+			for(int k = 0; k < media[parte].length; k++){
+				media[parte][k] /= count[parte][k];
+			}
+		}	
+
+		for (int phase = 0; phase<=2; phase++){
+			if(phase == 0){
+				System.out.println("\nfase high T-----");
+			}else if(phase == 1){
+				System.out.println("\nfase mid T-----");
+			}else{
+				System.out.println("\nfase low T-----");
+			}
+			for (int op = 0; op<=5; op++){
+				if (op == 0){
+					System.out.print("media add: ");
+				}else if(op == 1){
+					System.out.print("media remove: ");
+				}else if(op == 2){
+					System.out.print("media shift: ");
+				}else if(op == 3){
+					System.out.print("media recalculate: ");
+				}else if(op == 4){
+					System.out.print("media expand: ");
+				}else if(op == 5){
+					System.out.print("media shrink: ");
+				}
+				System.out.println(media[phase][op] + "\t#operazioni: " + count[phase][op] +
+						"\taccept: " + (count[phase][op]-acceptSecondCount[phase][op]-rejectCount[phase][op]) + "\taccept2nd: " + acceptSecondCount[phase][op] + 
+						"\treject: " + rejectCount[phase][op]);
+			}
+		}
+		if(maximumScoreEver > mh.getScore()){
+			System.out.println("\n\nIl punteggio pi� alto e' stato: " + maximumScoreEver);
+			System.out.println("\nAllo step no. " + check + "\n");
+			System.out.println(bestMh.toString());
+			System.out.println("\n\nn.Sequenze: " + bestMh.cardinality());
+			System.out.println("\n\nscore bestMh: " + maximumScoreEver);
+
+		}
+		//		for(double e:debRem){
+		//			if(e != 0.0){
+		//				System.out.println(e);
+		//			}
+		//		}
+
+		//WebLogo
+		boolean webLogo=false;
+		if(webLogo){
+			System.out.println(bestMh.toString(webLogo,true));
+		}	
+
+		Writer writer = null;
+
+		try {
+			writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream("./src/out/weblogo.fa"), "utf-8"));
+
+
+			writer.write(bestMh.toString(webLogo, true));
+
+		} catch (IOException ex) {
+		} finally {
+			try{writer.close();} catch (Exception ex) {}
+		}
+
+		try {
+			writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream("./src/testRegex/out.fa"), "utf-8"));
+
+
+			writer.write(bestMh.toStringTestRegex(webLogo, true));
+
+		} catch (IOException ex) {
+		} finally {
+			try {writer.close();} catch (Exception ex) {}
+		}
+
+		String[] tmp =  args[0].split("/");
+		String fileBench = tmp[tmp.length-1].split("\\.")[0]; //
+		String pathBench = "./src/benchmark/" + fileBench + ".txt";
+		try {
+
+			writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(pathBench), "utf-8"));
+
+
+			writer.write(bestMh.toString());
+			writer.write("\n#PSSM\n");
+			writer.write(bestMh.printPSSM());
+			writer.write("\n#score\t" + bestMh.getScore());
+			writer.write("\n#seq\t" + bestMh.cardinality());
+			writer.write("\n#width\t" + bestMh.getMotifWidth());
+			writer.write("\n#escape\t" + escaped);
+
+
+
+		} catch (IOException ex) {
+		} finally {
+			try {writer.close();} catch (Exception ex) {}
+		}
+		//file da passare al jar che calcola lo score, per i test
+		
+		String pathScoreTest = "./src/scoreTest/" + fileBench + ".txt";
+
+		try {
+
+			writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(pathScoreTest), "utf-8"));
+
+
+			writer.write(bestMh.toString2());
+
+
+		} catch (IOException ex) {
+		} finally {
+			try {writer.close();} catch (Exception ex) {}
+		}
+		//		
+		//***************Prova INFOcontent PSSMNewScore******//***************Prova INFOcontent PSSMNewScore******//***************Prova p-value******
+
+//				System.out.println("Info Content bestMh: " + bestMh.getScore());
+
+
+		//***************ProvINFOcontent PSSMNewScore******//***************Prova INFOcontent PSSMNewScore******//***************Prova p-value******
+	}
+
+}
