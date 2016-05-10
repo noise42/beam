@@ -1,7 +1,7 @@
 # beam
 RNA secondary structure motif discovery
 ##the executable version is in .jar format
-external libraries (commons.io/math) are not included in the repository. Just add them to the project
+(if you want to compile the project by yourself, external libraries (commons.io/math) are not included in the repository. Just add them to the project)
 
 options:
 
