@@ -8,6 +8,14 @@ options:
 -f input file
 
 -g backGround, to compute p-value
+  The background file must have the same format as the input, that is a FASTA file with
+
+    >ID
+    primary sequence
+    dot-bracket
+    BEAR notation (encodable with the bear Encoder @ http://beam.uniroma2.it/download)
+    >ID2
+    ...
 
 -w Min motif Width (10)
 
