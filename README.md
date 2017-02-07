@@ -1,5 +1,7 @@
 # beam
-RNA secondary structure motif discovery
+RNA secondary structure motif discovery.
+The standalone version requires the user to provide the input (and eventually background) files in fastB format.
+Use the encoder provided on the webserver (beam.uniroma2.it/download).
 ##the executable version is in .jar format
 (if you want to compile the project by yourself, external libraries (commons.io/math) are not included in the repository. Just add them to the project)
 
