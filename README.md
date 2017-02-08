@@ -1,11 +1,11 @@
-# beam
+# Beam
 RNA secondary structure motif discovery.
 The standalone version requires the user to provide the input (and eventually background) files in fastB format.
 Use the encoder provided on the webserver (beam.uniroma2.it/download).
-##the executable version is in .jar format
+##The executable version is in .jar format
 (if you want to compile the project by yourself, external libraries (commons.io/math) are not included in the repository. Just add them to the project)
 
-options (in parentheses the default options, if appliable):
+### options (in parentheses the default options, if appliable):
 
 -f input file
   A fasta file with additional lines for dotbracket (optional) and BEAR encoding (needed). Informally called fastB (fastBEAR).
@@ -57,4 +57,11 @@ options (in parentheses the default options, if appliable):
 -n model_limit (100) – influences the maximum number of structures that form a motif model. It is advisable not to go over this limit, for computational time reasons. The option is here mostly for developers.
 
 -h print help and exit
+
+## In case you use RNAfold to predict secondary structures
+### fold
+awk '/^>/ {print; getline; print; getline; print $1}' \<rnafoldOutput\> \> \<encoderReady\>
+### encode
+java -jar \<encoder.jar\> \<encoderReady\> \<BEAMready\>
+then use the \<BEAMready\> file to run BEAM (-f flag)
 
