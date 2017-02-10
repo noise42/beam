@@ -44,8 +44,6 @@ Use the encoder provided on the webserver (beam.uniroma2.it/download).
 
 -r cooling Rate (0.001)
 
--o output folder (same name as input)
-
 -C clean mode (1,2,3) : 1. Exclude negative partials 2. Exclude partials under the 50% of the partial mean 3. Exclude partials under 90% of the mean. (3)
 
 -b f (false) - weight less (mbr[:][:]=0 ) the branch-branch alignments
