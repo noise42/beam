@@ -1,0 +1,70 @@
+## WORK IN PROGRESS (BEAM 2.0 friendly)
+Upon completion of a run, a folder named "results" will be created in the same path of your BEAM executable.
+Within the "results" folder, all the runs' folders will be stored with the SAME BASENAME OF THE INPUT FILE.
+
+e.g. if you called BEAM with "-f important_data.fb ... " 
+	you will find a folder with this path: 
+		results/important_data/
+		
+The structure of the results folder is the following:
+results/
+	<fileBaseName>/
+		cooccurrence.png
+		MI.png
+		<backgroundFile>
+		<inputFile>
+		distance_peaks.txt
+		<baseName>_summary.nuc.txt
+		<baseName>_summary.txt
+		benchmark/
+			motifs/
+			(mask<N>/ if -k T)
+		webLogoOut/
+			motifs/
+			(mask<N>/ if -k T)			
+		distance/
+			
+Description of each element (a prepending "**" means that it stores a good amount of the information one is probably looking for:
+
+	benchmark/motifs/
+		It contains the majority of the information created with BEAM, motifs, models and statistics.
+		
+		<baseName>_m<mask>_run<run>.txt : the RNAs windows used to create the motif model + PFM + other data. This is before searching the dataset for motif instances.
+
+				
+		**<baseName>_m<mask>_run<run>.search.txt : RNAs found with a search of the model in the dataset + background.
+			The background instances have a "_bg" appended at the end of the name and are presented first in list.
+			+ PFM + other data.
+			
+		FORMAT (divided in sections):
+			#1:
+				BEAR	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
+				...
+				BEAR	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+			
+			#2 starting with "#otherMatches":
+				left for future data
+			
+			#3 starting with "#Seq PSSM": (these are the nucleotides underlying the structure model)
+				Nucleotides	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
+				...
+				Nucleotides	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+				
+			#4 starting with "#DB": (these are the dot-brackets underlying the structure model)
+				DotBracket	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
+				...
+				DotBracket	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+				
+			#5 starting with "#PSSM": (more a PFM to be precise, it reflects the multiple alignment found in #1)
+				BEARcharacter : relative frequency in the column	BEARcharacter2 : relative frequency ...
+				...
+			
+			then	
+			#score : here is 0.0 (the model score is int the model file)
+			#seq : number of matching sequences found
+			#width : motif width (corresponds to the model's)
+			the other parameters are set to default values for these files.
+			
+			
+		<baseName>_m<mask>_run<run>.search.txt.gauss : deprecated
+		
