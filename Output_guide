@@ -14,10 +14,10 @@ results/
 		<backgroundFile>
 		<inputFile>
 		distance_peaks.txt
-		<baseName>_summary.nuc.txt
-		<baseName>_summary.txt
+		** <baseName>_summary.nuc.txt
+		** <baseName>_summary.txt
 		benchmark/
-			motifs/
+			** motifs/
 			(mask<N>/ if -k T)
 		webLogoOut/
 			motifs/
@@ -26,45 +26,116 @@ results/
 			
 Description of each element (a prepending "**" means that it stores a good amount of the information one is probably looking for:
 
+	<baseName>_summary.txt (and .nuc, if -N t, BEAM1.6.1 and higher)
+		It contains a summary of the run
+		bin : Length-Structure bin as per (Pietrosanto et al. 2016 and Mattei et al. 2015)
+		
+		#motif=N
+		BEAR consensus if present
+		
+		#qBEAR
+		qBEAR consensus (easier to interpret)
+		
+		pvalue=pvalue of MannWhitney U Test against 
+			the null hypothesis that the two samples of partial scores of the RNA with the motif
+			and the partials scores of all the background scored with the model PFM (alignment with MBR, substitution matrix of secondary structures)
+			come from the same distribution. Specifically H0 : P(MotifScore > BGscore) = P(MotifScore < BGscore)
+		U= MannWhitney U statistic
+		AUC=derived from the U statistic, it rates the classifying power of the motif (U/n1n2 where n1 and n2 are the size of the two samples - motif and bg)
+		cohend= effect size, i.e. the z-score of the mean model score if the population is assumed to be the background
+		cohenU3= probability that a sample with the motif model mean is drawn from a different distribution than that of the background
+		score= BEAM score, it is the sum of the individual partial scores of motif istances
+		coverage= fraction of RNA in the input containing the motif
+		fall-out= fraction of the background RNAs with a score that is at least 90% of the mean motif model score (False Positive Rate)
+		runtime(s)= seconds took for this motif to be computed and completed		
+		
+		###NOTE for .nuc files the substitution matrix is a (5,-4), 5 for identities and -4 otherwise.
+
+
 	benchmark/motifs/
 		It contains the majority of the information created with BEAM, motifs, models and statistics.
-		
-		<baseName>_m<mask>_run<run>.txt : the RNAs windows used to create the motif model + PFM + other data. This is before searching the dataset for motif instances.
-
+		** cross_analysis.txt (from BEAM 2.0) :
+			Cooccurrence matrix between models (asymmetrical matrix): 
+				sequenceN is the Nth motif in sequence (if -N t is specified)
+				structureN is the Nth motif in structure
+				the rowToColumn information is the fraction of RNAs containing Row motif that contain Column motif as well
 				
-		**<baseName>_m<mask>_run<run>.search.txt : RNAs found with a search of the model in the dataset + background.
+			Mutual Information MI between models (symmetrical matrix):
+				sequenceN is the Nth motif in sequence (if -N t is specified)
+				structureN is the Nth motif in structure
+				the rowToColumn information is the Mutual Information between the two models, 
+				computed with binary vectors with 1s if the RNA had the motif and 0 otherwise.
+
+		
+				
+		** <baseName>_m<mask>_run<run>.search.txt : RNAs found with a search of the model in the dataset + background.
+			<mask> is the motif number, <run> is the number identifying the parallel starting point if -R was specificied, otherwise is 1.
 			The background instances have a "_bg" appended at the end of the name and are presented first in list.
 			+ PFM + other data.
 			
-		FORMAT (divided in sections):
-			#1:
-				BEAR	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
-				...
-				BEAR	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+			FORMAT (divided in sections):
+				#1:
+					BEAR	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
+					...
+					BEAR	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+
+				#2 starting with "#otherMatches":
+					left for future data
+
+				#3 starting with "#Seq PSSM": (these are the nucleotides underlying the structure model)
+					Nucleotides	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
+					...
+					Nucleotides	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+
+				#4 starting with "#DB": (these are the dot-brackets underlying the structure model)
+					DotBracket	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
+					...
+					DotBracket	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+
+				#5 starting with "#PSSM": (more a PFM to be precise, it reflects the multiple alignment found in #1)
+					BEARcharacter : relative frequency in the column	BEARcharacter2 : relative frequency ...
+					...
+
+				then	
+				#score : here is 0.0 (the model score is int the model file)
+				#seq : number of matching sequences found
+				#width : motif width (corresponds to the model's)
+				the other parameters are set to default values for these files.
 			
-			#2 starting with "#otherMatches":
-				left for future data
 			
-			#3 starting with "#Seq PSSM": (these are the nucleotides underlying the structure model)
-				Nucleotides	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
-				...
-				Nucleotides	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
+		<baseName>_m<mask>_run<run>.txt : the RNAs windows used to create the motif model + PFM + other data. This is before searching the dataset for motif instances.
+			FORMAT:
+				as the former but with
+				#escape : True if run reached convergence
+				#onStep : step of convergence or total number of steps done
+				#minSteps : -s option
+				#maxSteps : -S option
 				
-			#4 starting with "#DB": (these are the dot-brackets underlying the structure model)
-				DotBracket	ID(_bg)$subopt	RNAlength	motifStart	motifEnd	partialScore
-				...
-				DotBracket	ID$subopt	RNAlength	motifStart	motifEnd	partialScore
-				
-			#5 starting with "#PSSM": (more a PFM to be precise, it reflects the multiple alignment found in #1)
-				BEARcharacter : relative frequency in the column	BEARcharacter2 : relative frequency ...
-				...
-			
-			then	
-			#score : here is 0.0 (the model score is int the model file)
-			#seq : number of matching sequences found
-			#width : motif width (corresponds to the model's)
-			the other parameters are set to default values for these files.
-			
-			
 		<baseName>_m<mask>_run<run>.search.txt.gauss : deprecated
+	
+	
+	webLogoOut/motifs/
+		fasta files in qBEAR (quickBEAR) to use with WebLogo. The suggested command is 
+		    ./weblogo -a 'ZAQXSWCDEVFRBGTNHY' -f <weblogo.fa> -D fasta -o <out.eps> --composition="none" -C red ZAQ 'Stem' -C blue XSW 'Loop' -C forestgreen CDE 'InternalLoop' -C orange VFR 'StemBranch' -C DarkOrange B 'Bulge' -C lime G 'BulgeBranch' -C purple T 'Branching' -C limegreen NHY 'InternalLoopBranch'
+
+
+	distance/ (BEAM 2.0, requires python)
+		contains plots with the distribution of the distances of pairs of motif models (distance from motif starts).
+		The wording is like this: number only for structure models, number+"n" for sequence models.
+			In this sense: "1n3" means the distance between model 1 in sequence and model 3 in structure (specifically 1n MINUS 3)
+				"23" is structure 2 minus structure 3 and so on. 
+		The ones with single peaks are reported at the end of the run and analysed in the "distance_peaks.txt" file ../
+		You should check "distance_peaks.txt" before going through these plots (which may be misleading because of the null distribution)
 		
+	distance_peaks.txt
+		for all the pairs with single distance peaks, a Kolmogorov Smirnov test with p-value and statistic reported.
+		Remember that the null distribution of (a-b) where a and b are two uniform distributed variables is pyramid shaped so look at the p-value to see if they are significant
+		A mean distance is reported (that is, the position of the peak).
+		E.g. a significant peak at -20 means that the two models are found consistently at a distance of 20 nt 
+			...startOfA--------------------startOfB---------...
+	MI.png
+	Cooccurrence.png : 
+		contains grids with fancy representations for the cross_analysis.txt file. The colour scale is matched with the MI and Cooccurrence range.
+		
+	
+
