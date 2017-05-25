@@ -39,6 +39,7 @@ Use the encoder provided on the webserver (beam.uniroma2.it/download).
 
 -R runs (1) - number of runs to be tried before choosing the mask 
 
+**Advanced Options**:
 
 -T Starting Temperature (100)
 
@@ -55,6 +56,11 @@ Use the encoder provided on the webserver (beam.uniroma2.it/download).
 -n model_limit (100) – influences the maximum number of structures that form a motif model. It is advisable not to go over this limit, for computational time reasons. The option is here mostly for developers.
 
 -h print help and exit
+
+**Alternative Modes**
+
+--circ treat RNAs as if they were circularized (both sequence and structure, and subopts if appliable)
+  you will see a motif that is on the backspliced junction if start and end of a motif position are "switched" (start>end)
 
 ## In case you use RNAfold to predict secondary structures
 ### fold
