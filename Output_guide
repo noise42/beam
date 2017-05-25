@@ -36,20 +36,24 @@ Description of each element (a prepending "**" means that it stores a good amoun
 		#qBEAR
 		qBEAR consensus (easier to interpret)
 		
-		pvalue=pvalue of MannWhitney U Test against 
+		pvalueMW=pvalue of MannWhitney U Test against 
 			the null hypothesis that the two samples of partial scores of the RNA with the motif
-			and the partials scores of all the background scored with the model PFM (alignment with MBR, substitution matrix of secondary structures)
+			and the partials scores of top scoring background with the model PFM (alignment with MBR, substitution matrix of secondary structures)
 			come from the same distribution. Specifically H0 : P(MotifScore > BGscore) = P(MotifScore < BGscore)
 		U= MannWhitney U statistic
 		AUC=derived from the U statistic, it rates the classifying power of the motif (U/n1n2 where n1 and n2 are the size of the two samples - motif and bg)
 		cohend= effect size, i.e. the z-score of the mean model score if the population is assumed to be the background
 		cohenU3= probability that a sample with the motif model mean is drawn from a different distribution than that of the background
+		pvalueHG=pvalue of the hypergeometric test. The population size is the sum of input and bg size, the successes in the population is the input size (usually is lower),
+			the sample size is the number of RNAs with the motif 
+			and the successes in the sample is the number of RNAs with the motif that originally belonged to the input.
+			In this way the null hypothesis is that we are drawing the sample randomly from the original distribution.
 		score= BEAM score, it is the sum of the individual partial scores of motif istances
 		coverage= fraction of RNA in the input containing the motif
 		fall-out= fraction of the background RNAs with a score that is at least 90% of the mean motif model score (False Positive Rate)
 		runtime(s)= seconds took for this motif to be computed and completed		
 		
-		###NOTE for .nuc files the substitution matrix is a (5,-4), 5 for identities and -4 otherwise.
+		###NOTE for .nuc files the substitution matrix is a (3,-2), 3 for identities and -2 otherwise.
 
 
 	benchmark/motifs/
